@@ -1,0 +1,47 @@
+# This code is just for changing the US Treasury dataframe from having daily entries to having quarterly entries
+# The interest rates are the means of interest rates in each quarter
+# You'll need to change the folder path to the path where your folder is containing all of the years of data from the daily treasury data
+# I just downloaded two years of data to make the code, but it'll work for the 20 years of data
+
+
+
+#Importing the daily treasury rates data
+import os
+
+# Path to the folder containing the text files
+folder_path = r"/content/drive/MyDrive/data/daily-treasury-rates"
+
+# List all files in the folder
+file_list = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
+
+# Initialize an empty list to store DataFrames
+dataframes = []
+
+# Read each file and append the DataFrame to the list
+for file_name in file_list:
+    file_path = os.path.join(folder_path, file_name)
+    df = pd.read_csv(file_path, header=0, engine='python', encoding='latin1', on_bad_lines='skip')
+    dataframes.append(df)
+
+# Concatenate all DataFrames into a single DataFrame
+rates_df = pd.concat(dataframes, ignore_index=True)
+
+
+
+#changing date to date-time format
+rates_df['Date'] = pd.to_datetime(rates_df['Date'].astype(str), infer_datetime_format=True , utc=True)
+rates_df.head()
+
+
+
+# Giving the year and quarter each entry is from
+rates_df['Year'] = rates_df['Date'].dt.year
+rates_df['Quarter'] = rates_df['Date'].dt.quarter
+rates_df.sort_values('Date').head(150)
+
+
+
+finalrates = rates_df.groupby(['Year', 'Quarter']).mean()
+finalrates = finalrates.drop(['Date'], axis=1)
+finalrates.head(8)
+
